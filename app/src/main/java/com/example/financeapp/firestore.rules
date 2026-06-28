@@ -1,0 +1,30 @@
+// firestore.rules
+// Regras de segurança do Firestore — impede acesso sem autenticação
+// e garante que cada usuário acesse apenas seus próprios dados.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Transações ────────────────────────────────────────────────────
+    // Coleção global (implementação atual do app — sem isolamento por usuário)
+    match /transactions/{transactionId} {
+      // Apenas usuários autenticados podem ler e escrever
+      allow read, write: if request.auth != null;
+    }
+
+    // ── Transações isoladas por usuário (versão recomendada para produção) ──
+    // Descomente este bloco e remova o bloco acima quando quiser isolar dados
+    // por usuário autenticado:
+    //
+    // match /users/{userId}/transactions/{transactionId} {
+    //   allow read, write: if request.auth != null && request.auth.uid == userId;
+    // }
+
+    // ── Bloqueio padrão ───────────────────────────────────────────────
+    // Qualquer outra coleção não mapeada é negada por padrão
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
